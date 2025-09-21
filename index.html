@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>💧 Trinkwasser Erinnerung</title>
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#3b82f6" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      @media (max-width: 768px) {
+        body {
+          background: #f8fafc;
+          padding: 0;
+          align-items: flex-start;
+        }
+      }
+
+      .container {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        max-width: 400px;
+        width: 100%;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          border-radius: 0;
+          box-shadow: none;
+          padding: 30px 20px;
+          max-width: 100%;
+          min-height: 100vh;
+        }
+      }
+
+      .water-icon {
+        font-size: 80px;
+        margin-bottom: 20px;
+        animation: bounce 2s infinite;
+      }
+
+      @keyframes bounce {
+        0%,
+        20%,
+        50%,
+        80%,
+        100% {
+          transform: translateY(0);
+        }
+        40% {
+          transform: translateY(-10px);
+        }
+        60% {
+          transform: translateY(-5px);
+        }
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 28px;
+      }
+
+      .subtitle {
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 16px;
+      }
+
+      .status {
+        background: #f0f9ff;
+        border: 2px solid #3b82f6;
+        border-radius: 15px;
+        padding: 20px;
+        margin: 20px 0;
+      }
+
+      .status-text {
+        font-size: 18px;
+        color: #1e40af;
+        font-weight: 600;
+      }
+
+      .next-reminder {
+        color: #666;
+        font-size: 14px;
+        margin-top: 10px;
+      }
+
+      .progress-container {
+        margin: 30px 0;
+      }
+
+      .progress-bar {
+        background: #e5e7eb;
+        border-radius: 10px;
+        height: 20px;
+        overflow: hidden;
+        margin: 10px 0;
+      }
+
+      .progress-fill {
+        background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+        height: 100%;
+        border-radius: 10px;
+        transition: width 0.3s ease;
+        width: 0%;
+      }
+
+      .progress-text {
+        color: #666;
+        font-size: 14px;
+        margin-top: 5px;
+      }
+
+      .buttons {
+        display: flex;
+        gap: 15px;
+        margin: 30px 0;
+      }
+
+      .btn {
+        flex: 1;
+        padding: 15px 20px;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary {
+        background: #3b82f6;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #2563eb;
+        transform: translateY(-2px);
+      }
+
+      .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 2px solid #e5e7eb;
+      }
+
+      .btn-secondary:hover {
+        background: #e5e7eb;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin: 30px 0;
+      }
+
+      .stat-card {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #e2e8f0;
+      }
+
+      .stat-number {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1e40af;
+      }
+
+      .stat-label {
+        font-size: 12px;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .notification-status {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+        border-radius: 8px;
+        padding: 10px;
+        margin: 20px 0;
+        font-size: 14px;
+        color: #92400e;
+        transition: all 0.3s ease;
+      }
+
+      .notification-status.enabled {
+        background: #d1fae5;
+        border-color: #10b981;
+        color: #065f46;
+      }
+
+      .notification-status.clickable {
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .notification-status.clickable:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .notification-status.clickable:active {
+        transform: translateY(0);
+      }
+
+      .water-animation {
+        position: relative;
+        overflow: hidden;
+        border-radius: 50%;
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 20px;
+        background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 40px;
+      }
+
+      .water-animation::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          45deg,
+          transparent,
+          rgba(255, 255, 255, 0.3),
+          transparent
+        );
+        animation: shimmer 2s infinite;
+        border-radius: 50%;
+      }
+
+      @keyframes shimmer {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      .settings-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+
+      .settings-container {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        max-width: 400px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      }
+
+      .settings-container h2 {
+        text-align: center;
+        color: #1e40af;
+        margin-bottom: 30px;
+        font-size: 24px;
+      }
+
+      .setting-group {
+        margin: 25px 0;
+        padding: 20px;
+        background: #f8fafc;
+        border-radius: 15px;
+        border: 2px solid #e2e8f0;
+      }
+
+      .setting-group h3 {
+        color: #374151;
+        margin-bottom: 15px;
+        font-size: 18px;
+        text-align: center;
+      }
+
+      .input-group {
+        margin: 15px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .input-group label {
+        font-weight: 600;
+        color: #374151;
+        min-width: 80px;
+        font-size: 14px;
+      }
+
+      .time-input,
+      .goal-input {
+        flex: 1;
+        padding: 12px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 16px;
+        text-align: center;
+        transition: border-color 0.3s ease;
+      }
+
+      .time-input:focus,
+      .goal-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+      }
+
+      .settings-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 30px;
+      }
+
+      .settings-actions .btn {
+        flex: 1;
+        padding: 15px;
+        font-size: 16px;
+      }
+
+      @media (max-width: 480px) {
+        .container {
+          padding: 30px 20px;
+        }
+
+        .buttons {
+          flex-direction: column;
+        }
+
+        .stats {
+          grid-template-columns: 1fr;
+        }
+
+        .settings-container {
+          margin: 20px;
+          padding: 20px;
+        }
+
+        .input-group {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .input-group label {
+          min-width: auto;
+          margin-bottom: 5px;
+        }
+
+        .settings-actions {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="water-animation">💧</div>
+
+      <h1>Trinkwasser Erinnerung</h1>
+      <p class="subtitle">Bleib hydratisiert! 💙</p>
+
+      <div class="status">
+        <div class="status-text" id="statusText">Erinnerung ist aktiv</div>
+        <div class="next-reminder" id="nextReminder">
+          Nächste Erinnerung in: --:--
+        </div>
+      </div>
+
+      <div class="notification-status clickable" id="notificationStatus">
+        Benachrichtigungen werden geladen...
+      </div>
+
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">
+          Heute getrunken: 0 Gläser
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-number" id="todayCount">0</div>
+          <div class="stat-label">Heute</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="totalCount">0</div>
+          <div class="stat-label">Gesamt</div>
+        </div>
+      </div>
+
+      <div class="buttons">
+        <button class="btn btn-primary" id="drinkBtn">
+          Ich trinke jetzt! 💧
+        </button>
+        <button class="btn btn-secondary" id="pauseBtn">⏸️ Pausieren</button>
+        <button class="btn btn-secondary" id="settingsBtn">
+          ⚙️ Einstellungen
+        </button>
+      </div>
+    </div>
+
+    <!-- Einstellungsbildschirm -->
+    <div class="settings-screen" id="settingsScreen" style="display: none">
+      <div class="settings-container">
+        <h2>⚙️ Einstellungen</h2>
+
+        <div class="setting-group">
+          <h3>⏰ Erinnerungsabstand</h3>
+          <div class="input-group">
+            <label for="hoursInput">Stunden:</label>
+            <input
+              type="number"
+              id="hoursInput"
+              class="time-input"
+              value="2"
+              min="0"
+              max="23"
+            />
+          </div>
+          <div class="input-group">
+            <label for="minutesInput">Minuten:</label>
+            <input
+              type="number"
+              id="minutesInput"
+              class="time-input"
+              value="0"
+              min="0"
+              max="59"
+            />
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h3>🎯 Tägliches Ziel</h3>
+          <div class="input-group">
+            <label for="dailyGoalInput">Gläser pro Tag:</label>
+            <input
+              type="number"
+              id="dailyGoalInput"
+              class="goal-input"
+              value="8"
+              min="1"
+              max="50"
+            />
+          </div>
+        </div>
+
+        <div class="settings-actions">
+          <button class="btn btn-primary" id="saveSettingsBtn">
+            💾 Speichern
+          </button>
+          <button class="btn btn-secondary" id="cancelSettingsBtn">
+            ❌ Abbrechen
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      class WaterReminderApp {
+        constructor() {
+          this.reminderInterval = 2 * 60 * 60 * 1000; // 2 Stunden in Millisekunden
+          this.nextReminderTime = null;
+          this.todayCount = 0;
+          this.totalCount = 0;
+          this.isReminderActive = true;
+          this.reminderTimer = null;
+          this.dailyGoal = 8;
+          this.notificationsEnabled = true;
+
+          this.init();
+        }
+
+        async init() {
+          await this.loadData();
+          await this.requestNotificationPermission();
+          this.setupEventListeners();
+          this.startReminder();
+          this.updateUI();
+        }
+
+        async loadData() {
+          const data = localStorage.getItem("waterReminderData");
+          if (data) {
+            const parsed = JSON.parse(data);
+            this.todayCount = parsed.todayCount || 0;
+            this.totalCount = parsed.totalCount || 0;
+            this.nextReminderTime = parsed.nextReminderTime
+              ? new Date(parsed.nextReminderTime)
+              : null;
+            this.reminderInterval =
+              parsed.reminderInterval || 2 * 60 * 60 * 1000;
+            this.dailyGoal = parsed.dailyGoal || 8;
+            this.notificationsEnabled =
+              parsed.notificationsEnabled !== undefined
+                ? parsed.notificationsEnabled
+                : true;
+          }
+        }
+
+        saveData() {
+          const data = {
+            todayCount: this.todayCount,
+            totalCount: this.totalCount,
+            nextReminderTime: this.nextReminderTime,
+            reminderInterval: this.reminderInterval,
+            dailyGoal: this.dailyGoal,
+            notificationsEnabled: this.notificationsEnabled,
+          };
+          localStorage.setItem("waterReminderData", JSON.stringify(data));
+        }
+
+        async requestNotificationPermission() {
+          if ("Notification" in window) {
+            try {
+              const permission = await Notification.requestPermission();
+
+              if (permission === "granted") {
+                this.notificationsEnabled = true;
+                this.updateNotificationStatus();
+              } else {
+                this.notificationsEnabled = false;
+                this.updateNotificationStatus();
+              }
+            } catch (error) {
+              console.log("Notification permission error:", error);
+              this.notificationsEnabled = false;
+              this.updateNotificationStatus();
+            }
+          } else {
+            this.notificationsEnabled = false;
+            this.updateNotificationStatus();
+          }
+        }
+
+        setupEventListeners() {
+          const drinkBtn = document.getElementById("drinkBtn");
+          const pauseBtn = document.getElementById("pauseBtn");
+          const settingsBtn = document.getElementById("settingsBtn");
+          const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+          const cancelSettingsBtn =
+            document.getElementById("cancelSettingsBtn");
+          const notificationStatus =
+            document.getElementById("notificationStatus");
+
+          if (drinkBtn) {
+            drinkBtn.addEventListener("click", () => {
+              console.log("Drink button clicked!");
+              this.drinkWater();
+            });
+          } else {
+            console.error("Drink button not found!");
+          }
+
+          if (pauseBtn) {
+            pauseBtn.addEventListener("click", () => {
+              console.log("Pause button clicked!");
+              this.toggleReminder();
+            });
+          } else {
+            console.error("Pause button not found!");
+          }
+
+          if (settingsBtn) {
+            settingsBtn.addEventListener("click", () => {
+              console.log("Settings button clicked!");
+              this.openSettings();
+            });
+          } else {
+            console.error("Settings button not found!");
+          }
+
+          if (saveSettingsBtn) {
+            saveSettingsBtn.addEventListener("click", () => {
+              this.saveSettings();
+            });
+          }
+
+          if (cancelSettingsBtn) {
+            cancelSettingsBtn.addEventListener("click", () => {
+              this.closeSettings();
+            });
+          }
+
+          if (notificationStatus) {
+            notificationStatus.addEventListener("click", () => {
+              console.log("Notification status clicked!");
+              this.toggleNotifications();
+            });
+          }
+        }
+
+        startReminder() {
+          if (this.isReminderActive) {
+            this.scheduleNextReminder();
+          }
+        }
+
+        scheduleNextReminder() {
+          if (this.reminderTimer) {
+            clearTimeout(this.reminderTimer);
+          }
+
+          this.nextReminderTime = new Date(Date.now() + this.reminderInterval);
+          this.reminderTimer = setTimeout(() => {
+            this.showReminder();
+            this.scheduleNextReminder();
+          }, this.reminderInterval);
+
+          this.updateUI();
+        }
+
+        showReminder() {
+          if (
+            this.notificationsEnabled &&
+            "Notification" in window &&
+            Notification.permission === "granted"
+          ) {
+            try {
+              const notification = new Notification("💧 Zeit zum Trinken!", {
+                body: "Vergiss nicht, ein Glas Wasser zu trinken! Du schaffst das! 💙",
+                icon: "icon-192x192.png",
+                badge: "icon-192x192.png",
+                tag: "water-reminder",
+                requireInteraction: true,
+                actions: [
+                  {
+                    action: "drink",
+                    title: "Ich trinke jetzt!",
+                  },
+                ],
+              });
+
+              notification.onclick = () => {
+                window.focus();
+                this.drinkWater();
+                notification.close();
+              };
+            } catch (error) {
+              console.log("Notification error:", error);
+              // Fallback: Show alert if notification fails
+              alert(
+                "💧 Zeit zum Trinken! Vergiss nicht, ein Glas Wasser zu trinken! 💙"
+              );
+            }
+          } else if (this.notificationsEnabled) {
+            // Fallback: Show alert if notifications are enabled but not supported
+            alert(
+              "💧 Zeit zum Trinken! Vergiss nicht, ein Glas Wasser zu trinken! 💙"
+            );
+          }
+        }
+
+        drinkWater() {
+          this.todayCount++;
+          this.totalCount++;
+          this.saveData();
+          this.updateUI();
+          this.showDrinkConfirmation();
+        }
+
+        showDrinkConfirmation() {
+          const btn = document.getElementById("drinkBtn");
+          const originalText = btn.textContent;
+          btn.textContent = "✅ Getrunken!";
+          btn.style.background = "#10b981";
+
+          setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.background = "#3b82f6";
+          }, 2000);
+        }
+
+        toggleReminder() {
+          this.isReminderActive = !this.isReminderActive;
+
+          if (this.isReminderActive) {
+            this.startReminder();
+            this.showMessage("✅ Erinnerungen aktiviert!", "#10b981");
+          } else {
+            if (this.reminderTimer) {
+              clearTimeout(this.reminderTimer);
+              this.reminderTimer = null;
+            }
+            this.nextReminderTime = null;
+            this.showMessage("⏸️ Erinnerungen pausiert", "#f59e0b");
+          }
+
+          this.updateUI();
+        }
+
+        openSettings() {
+          const settingsScreen = document.getElementById("settingsScreen");
+          settingsScreen.style.display = "flex";
+          this.loadSettings();
+        }
+
+        closeSettings() {
+          const settingsScreen = document.getElementById("settingsScreen");
+          settingsScreen.style.display = "none";
+        }
+
+        loadSettings() {
+          const hours = Math.floor(this.reminderInterval / (60 * 60 * 1000));
+          const minutes = Math.floor(
+            (this.reminderInterval % (60 * 60 * 1000)) / (60 * 1000)
+          );
+
+          document.getElementById("hoursInput").value = hours;
+          document.getElementById("minutesInput").value = minutes;
+          document.getElementById("dailyGoalInput").value = this.dailyGoal;
+        }
+
+        saveSettings() {
+          const hours =
+            parseInt(document.getElementById("hoursInput").value) || 0;
+          const minutes =
+            parseInt(document.getElementById("minutesInput").value) || 0;
+          const newGoal =
+            parseInt(document.getElementById("dailyGoalInput").value) || 8;
+
+          this.reminderInterval = hours * 60 * 60 * 1000 + minutes * 60 * 1000;
+          this.dailyGoal = newGoal;
+
+          this.saveData();
+          this.startReminder(); // Restart with new interval
+          this.updateUI();
+          this.closeSettings();
+
+          this.showMessage("✅ Einstellungen gespeichert!", "#10b981");
+        }
+
+        toggleNotifications() {
+          this.notificationsEnabled = !this.notificationsEnabled;
+          this.saveData();
+          this.updateNotificationStatus();
+
+          const message = this.notificationsEnabled
+            ? "✅ Benachrichtigungen aktiviert!"
+            : "❌ Benachrichtigungen deaktiviert!";
+          const color = this.notificationsEnabled ? "#10b981" : "#f59e0b";
+
+          this.showMessage(message, color);
+        }
+
+        updateNotificationStatus() {
+          const statusEl = document.getElementById("notificationStatus");
+
+          if (this.notificationsEnabled) {
+            statusEl.textContent =
+              "✅ Benachrichtigungen aktiviert (Klick zum Deaktivieren)";
+            statusEl.className = "notification-status enabled clickable";
+          } else {
+            statusEl.textContent =
+              "❌ Benachrichtigungen deaktiviert (Klick zum Aktivieren)";
+            statusEl.className = "notification-status clickable";
+          }
+        }
+
+        showMessage(message, color) {
+          const btn = document.getElementById("settingsBtn");
+          const originalText = btn.textContent;
+          btn.textContent = message;
+          btn.style.background = color;
+          btn.style.color = "white";
+
+          setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.background = "#f3f4f6";
+            btn.style.color = "#374151";
+          }, 2000);
+        }
+
+        updateUI() {
+          // Status
+          const statusText = document.getElementById("statusText");
+          const nextReminder = document.getElementById("nextReminder");
+          const pauseBtn = document.getElementById("pauseBtn");
+
+          if (this.isReminderActive) {
+            statusText.textContent = "Erinnerung ist aktiv";
+            pauseBtn.textContent = "⏸️ Pausieren";
+            if (this.nextReminderTime) {
+              const timeLeft = this.nextReminderTime - new Date();
+              const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+              const minutes = Math.floor(
+                (timeLeft % (1000 * 60 * 60)) / (1000 * 60)
+              );
+              nextReminder.textContent = `Nächste Erinnerung in: ${hours}h ${minutes}m`;
+            }
+          } else {
+            statusText.textContent = "Erinnerung ist pausiert";
+            pauseBtn.textContent = "▶️ Aktivieren";
+            nextReminder.textContent =
+              "Klicke auf Aktivieren um Erinnerungen zu starten";
+          }
+
+          // Progress
+          const progressFill = document.getElementById("progressFill");
+          const progressText = document.getElementById("progressText");
+          const progress = Math.min(this.todayCount / this.dailyGoal, 1);
+
+          progressFill.style.width = `${progress * 100}%`;
+          progressText.textContent = `Heute getrunken: ${this.todayCount} von ${this.dailyGoal} Gläsern`;
+
+          // Stats
+          document.getElementById("todayCount").textContent = this.todayCount;
+          document.getElementById("totalCount").textContent = this.totalCount;
+        }
+      }
+
+      // Initialize app when page loads
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("DOM loaded, initializing app...");
+        try {
+          new WaterReminderApp();
+          console.log("App initialized successfully!");
+        } catch (error) {
+          console.error("Error initializing app:", error);
+        }
+      });
+
+      // Reset daily count at midnight
+      function resetDailyCount() {
+        const now = new Date();
+        const lastReset = localStorage.getItem("lastReset");
+        const today = now.toDateString();
+
+        if (lastReset !== today) {
+          const data = JSON.parse(
+            localStorage.getItem("waterReminderData") || "{}"
+          );
+          data.todayCount = 0;
+          data.lastReset = today;
+          localStorage.setItem("waterReminderData", JSON.stringify(data));
+          localStorage.setItem("lastReset", today);
+          location.reload();
+        }
+      }
+
+      // Check for daily reset
+      resetDailyCount();
+    </script>
+  </body>
+</html>
