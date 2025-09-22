@@ -1,5 +1,12 @@
-const CACHE_NAME = "wasser-app-v1";
-const urlsToCache = ["/", "/water_reminder.html", "/manifest.json"];
+const CACHE_NAME = "wasser-app-v2";
+// Use relative URLs so it works under GitHub Pages subpaths
+const urlsToCache = [
+  "./",
+  "./index.html",
+  "./manifest.json",
+  "./icon-192x192.png",
+  "./icon-512x512.png",
+];
 
 // Install Event - Cache Resources
 self.addEventListener("install", function (event) {
@@ -13,13 +20,29 @@ self.addEventListener("install", function (event) {
 
 // Fetch Event - Serve from Cache
 self.addEventListener("fetch", function (event) {
+  const request = event.request;
+  const url = new URL(request.url);
+
+  // For navigation requests, try network first, then cache, then fallback to index.html
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          return response;
+        })
+        .catch(() => {
+          return caches.match("./index.html");
+        })
+    );
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then(function (response) {
-      // Cache hit - return response
+    caches.match(request).then(function (response) {
       if (response) {
         return response;
       }
-      return fetch(event.request);
+      return fetch(request);
     })
   );
 });
@@ -47,8 +70,8 @@ self.addEventListener("sync", function (event) {
       // Send reminder notification
       self.registration.showNotification("Zeit zum Trinken! 💧", {
         body: "Vergiss nicht, ein Glas Wasser zu trinken!",
-        icon: "/icon-192x192.png",
-        badge: "/icon-192x192.png",
+        icon: "./icon-192x192.png",
+        badge: "./icon-192x192.png",
         tag: "water-reminder",
         requireInteraction: true,
         actions: [
@@ -67,7 +90,7 @@ self.addEventListener("notificationclick", function (event) {
   event.notification.close();
 
   if (event.action === "drink") {
-    // Open the app
-    event.waitUntil(clients.openWindow("/"));
+    // Open the app relative to scope
+    event.waitUntil(clients.openWindow("./"));
   }
 });

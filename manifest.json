@@ -2,12 +2,12 @@
   "name": "Trinkwasser Erinnerung",
   "short_name": "Wasser App",
   "description": "Erinnerung alle 2 Stunden Wasser zu trinken",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#3b82f6",
   "theme_color": "#3b82f6",
   "orientation": "portrait",
-  "scope": "/",
+  "scope": "./",
   "icons": [
     {
       "src": "icon-192x192.png",
